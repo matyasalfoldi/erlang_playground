@@ -6,24 +6,11 @@ main() ->
     %% A1, B1, X1, A2, B2, X2, ...
     RawMap = [50, 10, 30, 5, 90, 20, 40, 2, 25, 10, 8, 0],
     Map = parse_map(RawMap),
-    reverse_path(calc_path(Map), []).
+    lists:reverse(calc_path(Map), []).
 
 parse_map([]) -> [];
 parse_map([A,B,X|Rest]) ->
     [{{a,A},{b,B},{x,X}}] ++ parse_map(Rest).
-
-reverse_path([{Atom1,Val1},{x,Val2}], Result) ->
-    [{Atom1,Val1},{x,Val2}|Result];
-reverse_path([{Atom1,Val1}], Result) ->
-    [{Atom1,Val1}|Result];
-reverse_path([{Atom1,Val1},{x,Val2}|Rest], []) ->
-    reverse_path(Rest, [{Atom1,Val1},{x,Val2}]);
-reverse_path([{Atom1,Val1}|Rest], []) ->
-    reverse_path(Rest, [{Atom1,Val1}]);
-reverse_path([{Atom1,Val1},{x,Val2}|Rest], Result) ->
-    reverse_path(Rest, [{Atom1,Val1},{x,Val2}|Result]);
-reverse_path([{Atom1,Val1}|Rest], Result) ->
-    reverse_path(Rest, [{Atom1,Val1}|Result]).
 
 min(Path1, Path2, Path3, Path4) ->
     Cost1 = lists:foldl(fun({_, Val}, Acc) -> Acc + Val end, 0, Path1),
@@ -49,48 +36,32 @@ min(Path1, Path2) ->
 
 calc_path([{{a,A},{b,B},{x,X}}|Rest]) ->
     Path1 = calc_path(Rest, [{a,A}]),
-    Path2 = calc_path(Rest, [{a,A},{x,X}]),
+    Path2 = calc_path(Rest, [{x,X},{a,A}]),
     Path3 = calc_path(Rest, [{b,B}]),
-    Path4 = calc_path(Rest, [{b,B},{x,X}]),
+    Path4 = calc_path(Rest, [{x,X},{b,B}]),
     min(Path1,Path2,Path3,Path4).
 
-calc_path([{{a,_},{b,B},{x,0}}], [{a,A1},{x,X1}|RestPath]) ->
-    [{b,B},{a,A1},{x,X1}|RestPath];
-calc_path([{{a,A},{b,_},{x,0}}], [{b,B1},{x,X1}|RestPath]) ->
-    [{a,A},{b,B1},{x,X1}|RestPath];
+calc_path([{{a,_},{b,B},{x,0}}], [{x,X1},{a,A1}|RestPath]) ->
+    [{b,B},{x,X1},{a,A1}|RestPath];
+calc_path([{{a,A},{b,_},{x,0}}], [{x,X1},{b,B1}|RestPath]) ->
+    [{a,A},{x,X1},{b,B1}|RestPath];
 calc_path([{{a,A},{b,_},{x,0}}], [{a,A1}|RestPath]) ->
     [{a,A},{a,A1}|RestPath];
 calc_path([{{a,_},{b,B},{x,0}}], [{b,B1}|RestPath]) ->
     [{b,B},{b,B1}|RestPath];
-calc_path([{{a,_},{b,B},{x,X}}|Rest], [{a,A1},{x,X1}]) ->
-    Path1 = calc_path(Rest, [{b,B},{a,A1},{x,X1}]),
-    Path2 = calc_path(Rest, [{b,B},{x,X},{a,A1},{x,X1}]),
+calc_path([{{a,_},{b,B},{x,X}}|Rest], [{x,X1},{a,A1}|RestPath]) ->
+    Path1 = calc_path(Rest, [{b,B},{x,X1},{a,A1}|RestPath]),
+    Path2 = calc_path(Rest, [{x,X},{b,B},{x,X1},{a,A1}|RestPath]),
     min(Path1, Path2);
-calc_path([{{a,A},{b,_},{x,X}}|Rest], [{b,B1},{x,X1}]) ->
-    Path1 = calc_path(Rest, [{a,A},{b,B1},{x,X1}]),
-    Path2 = calc_path(Rest, [{a,A},{x,X},{b,B1},{x,X1}]),
-    min(Path1, Path2);
-calc_path([{{a,A},{b,_},{x,X}}|Rest], [{a,A1}]) ->
-    Path1 = calc_path(Rest, [{a,A},{a,A1}]),
-    Path2 = calc_path(Rest, [{a,A},{x,X},{a,A1}]),
-    min(Path1, Path2);
-calc_path([{{a,_},{b,B},{x,X}}|Rest], [{b,B1}]) ->
-    Path1 = calc_path(Rest, [{b,B},{b,B1}]),
-    Path2 = calc_path(Rest, [{b,B},{x,X},{b,B1}]),
-    min(Path1, Path2);
-calc_path([{{a,_},{b,B},{x,X}}|Rest], [{a,A1},{x,X1}|RestPath]) ->
-    Path1 = calc_path(Rest, [{b,B},{a,A1},{x,X1}|RestPath]),
-    Path2 = calc_path(Rest, [{b,B},{x,X},{a,A1},{x,X1}|RestPath]),
-    min(Path1, Path2);
-calc_path([{{a,A},{b,_},{x,X}}|Rest], [{b,B1},{x,X1}|RestPath]) ->
-    Path1 = calc_path(Rest, [{a,A},{b,B1},{x,X1}|RestPath]),
-    Path2 = calc_path(Rest, [{a,A},{x,X},{b,B1},{x,X1}|RestPath]),
+calc_path([{{a,A},{b,_},{x,X}}|Rest], [{x,X1},{b,B1}|RestPath]) ->
+    Path1 = calc_path(Rest, [{a,A},{x,X1},{b,B1}|RestPath]),
+    Path2 = calc_path(Rest, [{x,X},{a,A},{x,X1},{b,B1}|RestPath]),
     min(Path1, Path2);
 calc_path([{{a,A},{b,_},{x,X}}|Rest], [{a,A1}|RestPath]) ->
     Path1 = calc_path(Rest, [{a,A},{a,A1}|RestPath]),
-    Path2 = calc_path(Rest, [{a,A},{x,X},{a,A1}|RestPath]),
+    Path2 = calc_path(Rest, [{x,X},{a,A},{a,A1}|RestPath]),
     min(Path1, Path2);
 calc_path([{{a,_},{b,B},{x,X}}|Rest], [{b,B1}|RestPath]) ->
     Path1 = calc_path(Rest, [{b,B},{b,B1}|RestPath]),
-    Path2 = calc_path(Rest, [{b,B},{x,X},{b,B1}|RestPath]),
+    Path2 = calc_path(Rest, [{x,X},{b,B},{b,B1}|RestPath]),
     min(Path1, Path2).
